@@ -18,9 +18,15 @@ This node depends on `modbus-serial` as the main package and will install it alo
 
 ## Usage
 
+![Screenshot 01 - Multiple modbus API flows](https://github.com/w4tsn/node-red-contrib-modbus-api/blob/master/docs/img/screenshot01_set_of_minimal_flows.png)
+
 After a first `modbus in` node is placed a `modbus server` has to be created and assigned to it. This server will be the source for the node of any requests a client will send to the bound address and port.
 
+![Screenshot 02 - Modbus in config page](https://github.com/w4tsn/node-red-contrib-modbus-api/blob/master/docs/img/screenshot02_modbus_in_config_page.png)
+
 The `modbus in` node will then spawn messages on it's node output whenever a request on the `modbus server` matches the configured register, command and unitID of the `modbus in` node.
+
+![Screenshot 03 - Modbus server config page](https://github.com/w4tsn/node-red-contrib-modbus-api/blob/master/docs/img/screenshot03_modbus_server_config_page.png)
 
 Within the flow you may retrieve any data from within node-red. Be aware, that the default timeout for some of the modbus clients is gracefully chosen to be around 2000ms. In most cases this may be much shorter, so pay attantion to the round-trip time of you messages and request handling.
 
