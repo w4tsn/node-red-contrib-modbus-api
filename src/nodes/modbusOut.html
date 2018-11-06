@@ -1,0 +1,82 @@
+<script type="text/javascript">
+    RED.nodes.registerType('modbus out', {
+        category: 'output',
+        color: '#C0DEED',
+        defaults: {
+            name: {
+                value: ""
+            }
+        },
+        inputs: 1,
+        outputs: 0,
+        align: "right",
+        icon: "bridge-dash.png",
+        label: function () {
+            return this.name || "modbus out";
+        }
+    });
+</script>
+
+<script type="text/x-red" data-template-name="modbus out">
+    <div class="form-row">
+        <label for="node-input-name">
+            <i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="modbus out">
+    <p>Receive a specified modbus request and invoke a modbus response back to the client.</p>
+    <p>The incoming message <em>has to originate from a <code>modbus in</code> node</em>!</p>
+    <h3>Input</h3>
+    <dl class="message-properties">
+        <dt>payload
+            <span class="property-type">number|boolean</span>
+        </dt>
+        <dd>
+            the value returned in a modbus response to the modbus client.
+            The type depends on the function code.
+        </dd>
+        <dt>req
+            <span class="property-type">object</span>
+        </dt>
+        <dd>
+            the req object containing information about the modbus request.
+            <dl class="message-properties">
+                <dt>register
+                    <span class="property-type">number</span>
+                </dt>
+                <dd>
+                    the requested modbus register. It's value is between 0..65536.
+                </dd>
+                <dt>unitID
+                    <span class="property-type">number</span>
+                </dt>
+                <dd>
+                    the requested unitID to filter for specific units on the bus.
+                </dd>
+                <dt>command
+                    <span class="property-type">string</span>
+                </dt>
+                <dd>
+                    stringified name of the function code of this request.
+                </dd>
+            </dl>
+        </dd>
+        <dt>res
+            <span class="property-type">object</span>
+        </dt>
+        <dd>
+            the res object in preparation of the ending modbus result node.
+            <dl class="message-properties">
+                <dt>callback
+                    <span class="property-type">function</span>
+                </dt>
+                <dd>
+                    a callback from the modbus server to hand over control of the
+                    return value and error handling.
+                </dd>
+            </dl>
+        </dd>
+    </dl>
+</script>

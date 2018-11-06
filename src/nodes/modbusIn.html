@@ -1,0 +1,108 @@
+<script type="text/javascript">
+    RED.nodes.registerType('modbus in', {
+        category: 'input',
+        color: '#C0DEED',
+        defaults: {
+            name: {
+                value: ''
+            },
+            modbusServer: {
+                type: 'modbus server',
+                required: true
+            },
+            command: {
+                value: 'getCoil',
+                required: true
+            },
+            register: {
+                value: 0x0,
+                required: true,
+                validate:RED.validators.number()
+            }
+        },
+        inputs: 0,
+        outputs: 1,
+        icon: "bridge-dash.png",
+        label: function () {
+            return this.name || `[${this.command}:${this.register}] modbus in`;
+        }
+    });
+</script>
+
+<script type="text/x-red" data-template-name="modbus in">
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-modbusServer"><i class="icon-file"></i> Modbus Server</label>
+        <input type="text" id="node-input-modbusServer">
+    </div>
+    <div class="form-row">
+        <label for="node-input-command"><i class="icon-file"></i> Command (FC)</label>
+        <select type="text" id="node-input-command">
+            <option value="getCoil">FC 1: Read Coil Status</option>
+            <option value="getDiscreteInput">FC 2: Read Discrete Input</option>
+            <option value="getHoldingRegister">FC 3: Read Holding Register</option>
+            <option value="getInputRegister">FC 4: Read Input Register</option>
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="node-input-register"><i class="icon-file"></i> Register</label>
+        <input type="number" id="node-input-register" placeholder="0x0">
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="modbus in">
+    <p>Setup an API-like endpoint to turn a specific modbus request into a node-red flow. Just like you would with the `http` node.</p>
+    <h3>Output</h3>
+    <dl class="message-properties">
+        <dt>payload
+            <span class="property-type">object</span>
+        </dt>
+        <dd>
+            an empty object. Later used to store the return value of the response.
+        </dd>
+        <dt>req
+            <span class="property-type">object</span>
+        </dt>
+        <dd>
+            the req object containing information about the modbus request.
+            <dl class="message-properties">
+                <dt>register
+                    <span class="property-type">number</span>
+                </dt>
+                <dd>
+                    the requested modbus register. It's value is between 0..65536.
+                </dd>
+                <dt>unitID
+                    <span class="property-type">number</span>
+                </dt>
+                <dd>
+                    the requested unitID to filter for specific units on the bus.
+                </dd>
+                <dt>command
+                    <span class="property-type">string</span>
+                </dt>
+                <dd>
+                    stringified name of the function code of this request.
+                </dd>
+            </dl>
+        </dd>
+        <dt>res
+            <span class="property-type">object</span>
+        </dt>
+        <dd>
+            the res object in preparation of the ending modbus result node.
+            <dl class="message-properties">
+                <dt>callback
+                    <span class="property-type">function</span>
+                </dt>
+                <dd>
+                    a callback from the modbus server to hand over control of the
+                    return value and error handling.
+                </dd>
+            </dl>
+        </dd>
+    </dl>
+</script>

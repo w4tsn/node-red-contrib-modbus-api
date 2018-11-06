@@ -1,0 +1,67 @@
+<script type="text/javascript">
+    RED.nodes.registerType('modbus server', {
+        category: 'config',
+        defaults: {
+            host: { value: "0.0.0.0", required: true, validate:RED.validators.regex('\b((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.|$)){4}\b') },
+            port: { value: 1502, required: true, validate:RED.validators.number(true) },
+            debug: { value: false, required: false, validate:RED.validators.regex('\btrue\b|\bfalse\b') },
+            unitID: { value: 0, required: true, validate:RED.validators.number(true) },
+        },
+        label: function() {
+            return `${this.host}:${this.port}`;
+        }
+    });
+</script>
+
+<script type="text/x-red" data-template-name="modbus server">
+    <div class="form-row">
+        <label for="node-config-input-host"><i class="icon-file"></i> Host :Port</label>
+        <input type="text" id="node-config-input-host" style="width:40%;" placeholder="0.0.0.0">
+        <input type="number" id="node-config-input-port" style="width:15%;" placeholder="1502">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-unitID"><i class="icon-file"></i> Unit-ID</label>
+        <input type="number" id="node-config-input-unitID" style="width:40%;" placeholder="0">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-debug"><i class="icon-file"></i> Debug-Mode</label>
+        <input type="checkbox" id="node-config-input-debug" style="width:0%;">
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="modbus server">
+    <p>Provides a ModbusTCP server on a specified port.</p>
+    <h3>Details</h3>
+    <p>The server will automatically bind on the specified port and listen for modbus traffic. Incoming messages are processed and delegated to the corresponding <code>modbus in</code> nodes.</p>
+    <p>This TCP server is started and supposed to run along with node-red and serves as a 
+            delegator of request to the single <code>modbus in</code> nodes.</p>
+    <p>The server prepares a request/response message similar to those of the `http-nodes`
+        containing a callback function to hand over control to the flow enclosed by <code>modbus in</code> and <code>modbus out</code> nodes.</p>
+    <h3>Properties</h3>
+    <dl class="message-properties">
+        <dt>Host
+            <span class="property-type">string</span>
+        </dt>
+        <dd>
+            a URL or IP-Address the TCP server should bind to/listen on.
+        </dd>
+        <dt>port
+            <span class="property-type">number</span>
+        </dt>
+        <dd>
+            the port to bind to.
+        </dd>
+        <dt>Unit-ID
+            <span class="property-type">number</span>
+        </dt>
+        <dd>
+            this servers unit to differentiate between different server instances.
+        </dd>
+        <dt>Debug-Mode
+            <span class="property-type">boolean</span>
+        </dt>
+        <dd>
+            specify wether the node should output debug information and warnings.
+        </dd>
+    </dl>
+</script>
