@@ -1,5 +1,7 @@
 # node-red-contrib-modbus-api
 
+[![Build Status](https://travis-ci.org/w4tsn/node-red-contrib-modbus-api.svg?branch=master)](https://travis-ci.org/w4tsn/node-red-contrib-modbus-api)
+
 Create your own modbus-server graphically in node-red as you would create an http API. Configure `modbus-in` nodes for every possible address you want to supply, gather and prepare a response in the flow and conclude with a `modbus-out` node to transmit the respose back to the client.
 
 A request consists of a `modbus register` and a `modbus function code (FC)`
