@@ -4,6 +4,8 @@ Create your own modbus-server graphically in node-red as you would create an htt
 
 A request consists of a `modbus register` and a `modbus function code (FC)`
 
+Supported nodejs versions are `6`, `8` and `10` as well as node-red in version `0.18.x` and `0.19.x`. Previous versions of node-red might also work, but are not tested yet.
+
 ## Installation
 
 To install run
