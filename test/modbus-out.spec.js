@@ -28,6 +28,19 @@ const testFlow = [
         ]
     },
     {
+        'id': 'modbusin2',
+        'type': 'modbus in',
+        'name': '[getCoil:0x1] modbus in',
+        'command': 'getCoil',
+        'register': 0x1,
+        'modbusServer': 'modbusserver',
+        'wires': [
+            [
+                'helper-node'
+            ]
+        ]
+    },
+    {
         'id': 'helper-node',
         'type': 'helper',
         'inputs': 1,
@@ -78,7 +91,8 @@ describe('modbus out node', function () {
                     data.should.have.property('buffer');
                     should(data.data instanceof Array).equal(true);
                     should(data.buffer instanceof Buffer).equal(true);
-                    data.data[0].should.be.equal(true);
+                    data.data[0].should.be.equal(false);
+                    data.data[1].should.be.equal(true);
                     let logEvents = helper.log().args.filter(evt => {
                         return evt[0].type === 'modbus out';
                     });
@@ -91,7 +105,12 @@ describe('modbus out node', function () {
             };
             helperNode.on('input', (msg) => {
                 // Populate some data to write back to the client
-                msg.payload = true;
+                if ( msg.req.register === 1) {
+                    msg.payload = true;
+                }
+                else {
+                    msg.payload = false;
+                }
                 helperNode.send(msg);
             });
             client.connectTCP('127.0.0.1', { port: 8502 }, test);
@@ -100,19 +119,11 @@ describe('modbus out node', function () {
 
     it('should reject malformed input messages and log error messages', function (done) {
         helper.load(nodesUnderTest, testFlow, () => {
-            let helperNode = helper.getNode('helper-node');
-            let test = function () {
-                client.setID(1);
-                client.readCoils(0, 10).catch(err => {
-                    should.not.exist(err);
-                });
-            };
-            helperNode.on('input', (msg) => {
-                // Populate some data to write back to the client
-                msg = {};
-                helperNode.send(msg);
-            });
-            client.connectTCP('127.0.0.1', { port: 8502 }, test);
+            let modbusOutNode = helper.getNode('modbusout');
+            modbusOutNode.receive({});
+            modbusOutNode.receive({ res: {} });
+            modbusOutNode.receive({ res: { callback: () => true }});
+            modbusOutNode.receive({ payload: {} });
             setTimeout(() => {
                 let logEvents = helper.log().args.filter(evt => {
                     return evt[0].type === 'modbus out';
@@ -123,5 +134,4 @@ describe('modbus out node', function () {
             }, 20);
         });
     });
-
 });
