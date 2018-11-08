@@ -17,6 +17,11 @@ module.exports = function (RED) {
                 node.error(errorMsg);
                 return msg.res.callback(errorMsg);
             }
+            if (msg.payload < 0) {
+                let errorMsg = 'Payload invalid! Provided payload is negative!';
+                node.error(errorMsg);
+                return msg.res.callback(null, 0);
+            }
             return msg.res.callback(null, msg.payload);
         });
     }
