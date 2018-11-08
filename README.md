@@ -95,3 +95,4 @@ The BSD 3-Clause License
 * Automatically create a modbus server if there is none
 * Hook into the `modbus-serial` debug function and get it out to node-red
 * Implement modbus exceptions for the `modbus out` node
+* Implement data type selection and validation for modbus out node
