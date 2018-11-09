@@ -245,7 +245,7 @@ describe('modbus server node', function () {
         helper.load(modbusServer, flow, () => {
             // should be 200 requested registers, but this causes a uncaught out of bounds
             // exception within modbus-serial package.
-            client.connectTCP('127.0.0.1', { port: 8502 }, receiveFactory(client, 100, err => {
+            client.connectTCP('127.0.0.1', { port: 8502 }, receiveFactory(client, 65535, err => {
                 should.exist(err);
             }, done));
         });
