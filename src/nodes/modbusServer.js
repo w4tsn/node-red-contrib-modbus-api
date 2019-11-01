@@ -39,10 +39,16 @@ module.exports = function (RED) {
         this.getDiscreteInput = function (register, receive, errorHandler) {
             node.addRoute(register, 'getDiscreteInput', receive, errorHandler);
         };
+        this.setRegister = function (register, receive, errorHandler) {
+            node.addRoute(register, 'setRegister', receive, errorHandler);
+        };
+        this.setCoil = function (register, receive, errorHandler) {
+            node.addRoute(register, 'setCoil', receive, errorHandler);
+        };
         const apiMethods = {
-            _apiHandler: function (addr, command, unitID, callback, defaultval) {
+            _apiReadHandler: function (addr, command, unitID, callback, defaultval) {
                 let handler = node.routes.get(`${command}.${addr}`);
-                let req = {
+                    let req = {
                     register: addr,
                     unitID: unitID,
                     command: command
@@ -52,7 +58,26 @@ module.exports = function (RED) {
                 };
                 if (handler) handler.receive(req, res);
                 else {
+                    //this should actually return a Modbus Exception code 2
                     return callback(null, defaultval);
+                }
+            },
+            _apiWriteHandler: function (addr, command, unitID, callback, value) {
+                let handler = node.routes.get(`${command}.${addr}`);
+                let req = {
+                    register: addr,
+                    unitID: unitID,
+                    command: command,
+                    value: value,
+                };
+                let res = {
+                    callback: callback,
+                };
+                if (handler){
+                    handler.receive(req, res);
+                } else {
+                    //this should actually return a Modbus Exception code 2
+                    node.error({error:'Client attempted to write to invalid register',req:req});
                 }
             },
             /**
@@ -62,7 +87,7 @@ module.exports = function (RED) {
              * @param {function} callback function to delegate result control
              */
             getInputRegister: function (addr, unitID, callback) {
-                apiMethods._apiHandler(addr, 'getInputRegister', unitID, callback, 0);
+                apiMethods._apiReadHandler(addr, 'getInputRegister', unitID, callback, 0);
             },
             /**
              * FC 3 Read holding registers
@@ -71,7 +96,7 @@ module.exports = function (RED) {
              * @param {function} callback function to delegate result control
              */
             getHoldingRegister: function (addr, unitID, callback) {
-                apiMethods._apiHandler(addr, 'getHoldingRegister', unitID, callback, 0);
+                apiMethods._apiReadHandler(addr, 'getHoldingRegister', unitID, callback, 0);
             },
             /**
              * FC 2 Read discrete inputs
@@ -80,7 +105,7 @@ module.exports = function (RED) {
              * @param {function} callback function to delegate result control
              */
             getDiscreteInput: function (addr, unitID, callback) {
-                apiMethods._apiHandler(addr, 'getDiscreteInput', unitID, callback, false);
+                apiMethods._apiReadHandler(addr, 'getDiscreteInput', unitID, callback, false);
             },
             /**
              * FC 1 Read coil status
@@ -89,8 +114,26 @@ module.exports = function (RED) {
              * @param {function} callback function to delegate result control
              */
             getCoil: function (addr, unitID, callback) {
-                apiMethods._apiHandler(addr, 'getCoil', unitID, callback, false);
-            }
+                apiMethods._apiReadHandler(addr, 'getCoil', unitID, callback, false);
+            },
+            /**
+             * FC 5 Write coil
+             * @param {number} addr hex/Numerical address of a register
+             * @param {number} unitID filter for a specific unit/server
+             * @param {function} callback function to delegate result control
+             */
+            setCoil: function (addr, value, unitID, callback) {
+                apiMethods._apiWriteHandler(addr, 'setCoil', unitID, callback, value);
+            },
+            /**
+             * FC 6 Write register
+             * @param {number} addr hex/Numerical address of a register
+             * @param {number} unitID filter for a specific unit/server
+             * @param {function} callback function to delegate result control
+             */
+            setRegister: function (addr, value, unitID, callback) {
+                apiMethods._apiWriteHandler(addr, 'setRegister', unitID, callback, value);
+            },
         };
         try {
             node.modbusServerTCP = new ModbusRTU.ServerTCP(apiMethods, node.options);

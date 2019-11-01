@@ -37,6 +37,12 @@ module.exports = function (RED) {
         else if (this.command === 'getDiscreteInput') {
             this.modbusServer.getDiscreteInput(this.register, this.callback, this.errorHandler);
         }
+        else if (this.command === 'setRegister') {
+            this.modbusServer.setRegister(this.register, this.callback, this.errorHandler);
+        }
+        else if (this.command === 'setCoil') {
+            this.modbusServer.setCoil(this.register, this.callback, this.errorHandler);
+        }
     }
     RED.nodes.registerType('modbus in', modbusInNode);
 };
