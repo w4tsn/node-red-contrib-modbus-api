@@ -59,12 +59,12 @@ module.exports = function (RED) {
                 if (handler) {
                     handler.receive(req, res);
                 } else {
-                    //this should actually return a Modbus Exception code 2
                     callback({
                         modbusErrorCode: 0x02, // Illegal address
                         msg: "Invalid length"
                     },null);
-                    //node.error({error:'Client attempted to write to invalid register',req:req});
+                    //node.error({error:'A client attempted to read from invalid register',req:req});
+                    node.error('A client attempted to read from invalid register '+ JSON.stringify(req,null,'\t'));
                 }
             },
             _apiWriteHandler: function (addr, command, unitID, callback, value) {
@@ -84,8 +84,9 @@ module.exports = function (RED) {
                     callback({
                         modbusErrorCode: 0x02, // Illegal address
                         msg: "Invalid length"
-                    });//this should actually return a Modbus Exception code 2
-                    //node.error({error:'Client attempted to write to invalid register',req:req});
+                    },null);
+                    //node.error({error:'A client attempted to write to invalid register',req:req});
+                    node.error('A client attempted to write to invalid register '+ JSON.stringify(req,null,'\t'));
                 }
             },
             /**
