@@ -56,10 +56,15 @@ module.exports = function (RED) {
                 let res = {
                     callback: callback,
                 };
-                if (handler) handler.receive(req, res);
-                else {
+                if (handler) {
+                    handler.receive(req, res);
+                } else {
                     //this should actually return a Modbus Exception code 2
-                    return callback(null, defaultval);
+                    callback({
+                        modbusErrorCode: 0x02, // Illegal address
+                        msg: "Invalid length"
+                    },null);
+                    //node.error({error:'Client attempted to write to invalid register',req:req});
                 }
             },
             _apiWriteHandler: function (addr, command, unitID, callback, value) {
@@ -76,8 +81,11 @@ module.exports = function (RED) {
                 if (handler){
                     handler.receive(req, res);
                 } else {
-                    //this should actually return a Modbus Exception code 2
-                    node.error({error:'Client attempted to write to invalid register',req:req});
+                    callback({
+                        modbusErrorCode: 0x02, // Illegal address
+                        msg: "Invalid length"
+                    });//this should actually return a Modbus Exception code 2
+                    //node.error({error:'Client attempted to write to invalid register',req:req});
                 }
             },
             /**
@@ -145,6 +153,8 @@ module.exports = function (RED) {
             });
             if (RED.settings.verbose) {
                 node.warn(`Modbus TCP Server listening on ${node.options.host}:${node.options.port}.`);
+            } else {
+                node.log(`Modbus TCP Server listening on ${node.options.host}:${node.options.port}.`);
             }
         } catch (error) {
             node.error(`Error while starting the Modbus TCP server: ${error}`);

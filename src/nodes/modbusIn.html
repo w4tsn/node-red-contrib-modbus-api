@@ -1,7 +1,7 @@
 <script type="text/javascript">
     RED.nodes.registerType('modbus in', {
         category: 'network',
-        color: '#C0DEED',
+        color: "#C0DEED",
         defaults: {
             name: {
                 value: ''
@@ -25,7 +25,7 @@
         icon: "bridge-dash.png",
         label: function () {
             return this.name || `[${this.command}:${this.register}] modbus in`;
-        }
+        },
     });
 </script>
 
