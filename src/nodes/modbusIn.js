@@ -12,12 +12,21 @@ module.exports = function (RED) {
             node.error(error);
         };
         // for delegatation of control of node msg output to the modbus server
-        this.callback = function (req, res) {
+        this.readCallback = function (req, res) {
             let msgid = RED.util.generateId();
             res._msgid = msgid;
             node.send({
                 _msgid: msgid,
-                payload: {},
+                req:req,
+                res:res
+            });
+        };
+        this.writeCallback = function (req, res) {
+            let msgid = RED.util.generateId();
+            res._msgid = msgid;
+            node.send({
+                _msgid: msgid,
+                payload: req.value,
                 req:req,
                 res:res
             });
@@ -25,23 +34,29 @@ module.exports = function (RED) {
         this.on('close', () => {
             this.modbusServer.removeRoute(this.register, this.command);
         });
+        if (this.modbusServer) {
+            node.status({shape:"dot",fill:"green",text:"Ready"});
+            if (RED.settings.verbose) {
+                node.warn(`${this.command}:${this.register} is ready`);
+            }
+        }
         if (this.command === 'getInputRegister') {
-            this.modbusServer.getInputRegister(this.register, this.callback, this.errorHandler);
+            this.modbusServer.getInputRegister(this.register, this.readCallback, this.errorHandler);
         }
         else if (this.command === 'getHoldingRegister') {
-            this.modbusServer.getHoldingRegister(this.register, this.callback, this.errorHandler);
+            this.modbusServer.getHoldingRegister(this.register, this.readCallback, this.errorHandler);
         }
         else if (this.command === 'getCoil') {
-            this.modbusServer.getCoil(this.register, this.callback, this.errorHandler);
+            this.modbusServer.getCoil(this.register, this.readCallback, this.errorHandler);
         }
         else if (this.command === 'getDiscreteInput') {
-            this.modbusServer.getDiscreteInput(this.register, this.callback, this.errorHandler);
+            this.modbusServer.getDiscreteInput(this.register, this.readCallback, this.errorHandler);
         }
         else if (this.command === 'setRegister') {
-            this.modbusServer.setRegister(this.register, this.callback, this.errorHandler);
+            this.modbusServer.setRegister(this.register, this.writeCallback, this.errorHandler);
         }
         else if (this.command === 'setCoil') {
-            this.modbusServer.setCoil(this.register, this.callback, this.errorHandler);
+            this.modbusServer.setCoil(this.register, this.writeCallback, this.errorHandler);
         }
     }
     RED.nodes.registerType('modbus in', modbusInNode);
