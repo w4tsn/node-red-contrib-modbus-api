@@ -5,7 +5,7 @@
   "main": "src/index.js",
   "scripts": {
     "test": "mocha \"test/**/*spec.js\"",
-    "coverage": "istanbul cover _mocha $(find ./lib -name \"*.spec.js\" -not -path \"./node_modules/*\")",
+    "coverage": "istanbul cover _mocha $(find ./ -name \"*.spec.js\" -not -path \"./node_modules/*\")",
     "lint": "eslint \"src/**/*.js\"",
     "lint-fix": "eslint --fix \"src/**/*.js\""
   },
@@ -34,14 +34,14 @@
     }
   },
   "devDependencies": {
-    "eslint": "^5.8.0",
+    "eslint": "^6.7.1",
     "istanbul": "^0.4.5",
-    "mocha": "^5.2.0",
-    "node-red": "0.18.4",
-    "node-red-node-test-helper": "^0.1.8",
+    "mocha": "^6.2.2",
+    "node-red": "^1.0.3",
+    "node-red-node-test-helper": "^0.2.3",
     "should": "^13.2.3"
   },
   "dependencies": {
-    "modbus-serial": "^7.4.1"
+    "modbus-serial": "^7.7.3"
   }
 }

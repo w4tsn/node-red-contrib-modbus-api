@@ -2,7 +2,6 @@ const should = require('should');
 const helper = require('node-red-node-test-helper');
 const modbusServer = require('../src/nodes/modbusServer');
 const ModbusRTU = require('modbus-serial');
-let client = new ModbusRTU();
 
 helper.init(require.resolve('node-red'));
 
@@ -51,12 +50,21 @@ let receiveFactory = function (client, values = 10, errCallback, done) {
     };
 };
 
+// ModbusRTU client
+let client = null;
+
 describe('modbus server node', function () {
 
-    afterEach(() => {
-        client.close();
-        helper.unload();
-        should();
+    beforeEach((done) => {
+        client = new ModbusRTU();
+        helper.startServer(done);
+    });
+
+    afterEach((done) => {
+        client.close(() => {
+            helper.unload();
+            helper.stopServer(done);
+        });
     });
 
     it('should be loaded', function (done) {
@@ -72,6 +80,19 @@ describe('modbus server node', function () {
             modbusServerNode.should.have.property('options').which.is.a.Object();
             modbusServerNode.should.have.property('modbusServerTCP').which.is.a.Object();
             done();
+        });
+    });
+
+    it('should properly unload', function (done) {
+        let flow = [{
+            id: 'modbusserver',
+            type: 'modbus server',
+            name: 'modbus test server',
+            port: 8502
+        }];
+        helper.load(modbusServer, flow, () => {
+            let modbusServerNode = helper.getNode('modbusserver');
+            modbusServerNode.modbusServerTCP.close(() => done());
         });
     });
 
