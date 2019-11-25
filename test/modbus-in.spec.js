@@ -3,7 +3,6 @@ const helper = require('node-red-node-test-helper');
 const modbusIn = require('../src/nodes/modbusIn');
 const modbusServer = require('../src/nodes/modbusServer');
 const ModbusRTU = require('modbus-serial');
-let client = new ModbusRTU();
 
 helper.init(require.resolve('node-red'));
 const testFlow = [
@@ -74,12 +73,21 @@ const nodesUnderTest = [
     modbusServer
 ];
 
+// ModbusRTU client
+let client = null;
+
 describe('modbus in node', function () {
 
-    afterEach(() => {
-        client.close();
-        helper.unload();
-        should();
+    beforeEach((done) => {
+        client = new ModbusRTU();
+        helper.startServer(done);
+    });
+
+    afterEach((done) => {
+        client.close(() => {
+            helper.unload();
+            helper.stopServer(done);
+        });
     });
 
     it('should be loaded', function (done) {
