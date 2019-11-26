@@ -1,7 +1,7 @@
 <script type="text/javascript">
     RED.nodes.registerType('modbus in', {
-        category: 'input',
-        color: '#C0DEED',
+        category: 'network',
+        color: "#C0DEED",
         defaults: {
             name: {
                 value: ''
@@ -25,7 +25,7 @@
         icon: "bridge-dash.png",
         label: function () {
             return this.name || `[${this.command}:${this.register}] modbus in`;
-        }
+        },
     });
 </script>
 
@@ -45,6 +45,8 @@
             <option value="getDiscreteInput">FC 2: Read Discrete Input</option>
             <option value="getHoldingRegister">FC 3: Read Holding Register</option>
             <option value="getInputRegister">FC 4: Read Input Register</option>
+            <option value="setCoil">FC 5: Write Single Coil</option>
+            <option value="setRegister">FC 6: Write Single Register</option>
         </select>
     </div>
     <div class="form-row">
