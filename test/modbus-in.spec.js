@@ -74,19 +74,21 @@ const nodesUnderTest = [
 ];
 
 // ModbusRTU client
-let client = null;
+let client = new ModbusRTU();
 
 describe('modbus in node', function () {
 
     beforeEach((done) => {
-        client = new ModbusRTU();
-        helper.startServer(done);
+        client.connectTCP('127.0.0.1', { port: 8502 }, () => {
+            helper.startServer(done);
+        });
     });
 
     afterEach((done) => {
         client.close(() => {
-            helper.unload();
-            helper.stopServer(done);
+            helper.unload().then(() => {
+                helper.stopServer(done);
+            });
         });
     });
 
@@ -108,7 +110,7 @@ describe('modbus in node', function () {
             should.exist(modbusServerNode.routes);
             should.exist(modbusServerNode.routes.get('getCoil.0'));
             let route = modbusServerNode.routes.get('getCoil.0');
-            route.receive.should.be.equal(modbusInNode.callback);
+            route.receive.should.be.equal(modbusInNode.readCallback);
             route.errorHandler.should.be.equal(modbusInNode.errorHandler);
             done();
         });
@@ -129,7 +131,7 @@ describe('modbus in node', function () {
             let helperNode = helper.getNode('helper-node');
             let test = function () {
                 client.setID(1);
-                client.readCoils(0, 10).catch(err => {
+                client.readCoils(0, 1).catch(err => {
                     should.not.exist(err);
                     done();
                 });
@@ -145,7 +147,7 @@ describe('modbus in node', function () {
                 msg.res.should.have.property('callback');
                 done();
             });
-            client.connectTCP('127.0.0.1', { port: 8502 }, test);
+            test();
         });
     });
 
@@ -154,7 +156,7 @@ describe('modbus in node', function () {
             let helperNode = helper.getNode('helper-node');
             let test = function () {
                 client.setID(1);
-                client.readDiscreteInputs(0, 10).catch(err => {
+                client.readDiscreteInputs(0, 1).catch(err => {
                     should.not.exist(err);
                     done();
                 });
@@ -165,7 +167,7 @@ describe('modbus in node', function () {
                 msg.req.should.have.property('command', 'getDiscreteInput');
                 done();
             });
-            client.connectTCP('127.0.0.1', { port: 8502 }, test);
+            test();
         });
     });
 
@@ -174,7 +176,7 @@ describe('modbus in node', function () {
             let helperNode = helper.getNode('helper-node');
             let test = function () {
                 client.setID(1);
-                client.readHoldingRegisters(0, 10).catch(err => {
+                client.readHoldingRegisters(0, 1).catch(err => {
                     should.not.exist(err);
                     done();
                 });
@@ -185,7 +187,7 @@ describe('modbus in node', function () {
                 msg.req.should.have.property('command', 'getHoldingRegister');
                 done();
             });
-            client.connectTCP('127.0.0.1', { port: 8502 }, test);
+            test();
         });
     });
 
@@ -194,7 +196,7 @@ describe('modbus in node', function () {
             let helperNode = helper.getNode('helper-node');
             let test = function () {
                 client.setID(1);
-                client.readInputRegisters(0, 10).catch(err => {
+                client.readInputRegisters(0, 1).catch(err => {
                     should.not.exist(err);
                     done();
                 });
@@ -210,7 +212,7 @@ describe('modbus in node', function () {
                 msg.res.should.have.property('callback');
                 done();
             });
-            client.connectTCP('127.0.0.1', { port: 8502 }, test);
+            test();
         });
     });
 });
