@@ -160,8 +160,8 @@ module.exports = function (RED) {
         } catch (error) {
             node.error(`Error while starting the Modbus TCP server: ${error}`);
         }
-        node.on('close', () => {
-            node.modbusServerTCP.close();
+        node.on('close', (done) => {
+            node.modbusServerTCP.close(() => done());
         });
     }
     RED.nodes.registerType('modbus server', modbusServerNode);
