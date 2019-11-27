@@ -62,6 +62,54 @@ const testFlow = [
         ]
     },
     {
+        'id': 'modbusin_setCoil1',
+        'type': 'modbus in',
+        'command': 'setCoil',
+        'register': 10,
+        'modbusServer': 'modbusserver',
+        'wires': [
+            [
+                'helper-node'
+            ]
+        ]
+    },
+    {
+        'id': 'modbusin_setCoil2',
+        'type': 'modbus in',
+        'command': 'setCoil',
+        'register': 11,
+        'modbusServer': 'modbusserver',
+        'wires': [
+            [
+                'helper-node'
+            ]
+        ]
+    },
+    {
+        'id': 'modbusin_setRegister1',
+        'type': 'modbus in',
+        'command': 'setRegister',
+        'register': 12,
+        'modbusServer': 'modbusserver',
+        'wires': [
+            [
+                'helper-node'
+            ]
+        ]
+    },
+    {
+        'id': 'modbusin_setRegister2',
+        'type': 'modbus in',
+        'command': 'setRegister',
+        'register': 13,
+        'modbusServer': 'modbusserver',
+        'wires': [
+            [
+                'helper-node'
+            ]
+        ]
+    },
+    {
         'id': 'helper-node',
         'type': 'helper',
         'inputs': 1,
@@ -75,20 +123,20 @@ const nodesUnderTest = [
 
 // ModbusRTU client
 let client = new ModbusRTU();
+const options = { port: 8502 };
 
 describe('modbus in node', function () {
 
     beforeEach((done) => {
-        client.connectTCP('127.0.0.1', { port: 8502 }, () => {
+        client.connectTCP("127.0.0.1", options, () => {
             helper.startServer(done);
         });
     });
 
     afterEach((done) => {
         client.close(() => {
-            helper.unload().then(() => {
-                helper.stopServer(done);
-            });
+            helper.unload()
+            helper.stopServer(done);
         });
     });
 
@@ -133,7 +181,6 @@ describe('modbus in node', function () {
                 client.setID(1);
                 client.readCoils(0, 1).catch(err => {
                     should.not.exist(err);
-                    done();
                 });
             };
             helperNode.on('input', (msg) => {
@@ -147,7 +194,7 @@ describe('modbus in node', function () {
                 msg.res.should.have.property('callback');
                 done();
             });
-            test();
+            client.connectTCP("127.0.0.1", options, test);
         });
     });
 
@@ -158,7 +205,6 @@ describe('modbus in node', function () {
                 client.setID(1);
                 client.readDiscreteInputs(0, 1).catch(err => {
                     should.not.exist(err);
-                    done();
                 });
             };
             helperNode.on('input', (msg) => {
@@ -167,7 +213,7 @@ describe('modbus in node', function () {
                 msg.req.should.have.property('command', 'getDiscreteInput');
                 done();
             });
-            test();
+            client.connectTCP("127.0.0.1", options, test);
         });
     });
 
@@ -178,7 +224,6 @@ describe('modbus in node', function () {
                 client.setID(1);
                 client.readHoldingRegisters(0, 1).catch(err => {
                     should.not.exist(err);
-                    done();
                 });
             };
             helperNode.on('input', (msg) => {
@@ -187,7 +232,7 @@ describe('modbus in node', function () {
                 msg.req.should.have.property('command', 'getHoldingRegister');
                 done();
             });
-            test();
+            client.connectTCP("127.0.0.1", options, test);
         });
     });
 
@@ -198,7 +243,6 @@ describe('modbus in node', function () {
                 client.setID(1);
                 client.readInputRegisters(0, 1).catch(err => {
                     should.not.exist(err);
-                    done();
                 });
             };
             helperNode.on('input', (msg) => {
@@ -212,7 +256,59 @@ describe('modbus in node', function () {
                 msg.res.should.have.property('callback');
                 done();
             });
-            test();
+            client.connectTCP("127.0.0.1", options, test);
+        });
+    });
+
+    it('should output a sane modbus input message (FC5)', function (done) {
+        helper.load(nodesUnderTest, testFlow, () => {
+            let helperNode = helper.getNode('helper-node');
+            let test = function () {
+                client.setID(1);
+                client.writeCoil(10, true).catch(err => {
+                    should.not.exist(err);
+                });
+            };
+            helperNode.on('input', (msg) => {
+                should.exist(msg);
+                should.exist(msg._msgid);
+                msg.should.have.property('req');
+                msg.req.should.have.property('register', 10);
+                msg.req.should.have.property('unitID', 1);
+                msg.req.should.have.property('command', 'setCoil');
+                msg.should.have.property('res');
+                msg.res.should.have.property('callback');
+                done();
+            });
+            client.connectTCP("127.0.0.1", options, test);
+        });
+    });
+
+    it('should output a sane modbus input message (FC6)', function (done) {
+        helper.load(nodesUnderTest, testFlow, () => {
+            let received = 0;
+            let helperNode = helper.getNode('helper-node');
+            let test = function () {
+                client.setID(1);
+                client.writeCoils(10, [true]).catch(err => {
+                    should.not.exist(err);
+                });
+            };
+            helperNode.on('input', (msg) => {
+                this.received++;
+                should.exist(msg);
+                should.exist(msg._msgid);
+                msg.should.have.property('req');
+                msg.req.should.have.property('register', 10);
+                msg.req.should.have.property('unitID', 1);
+                msg.req.should.have.property('command', 'setCoil');
+                msg.req.should.have.property('value', true);
+                msg.should.have.property('res');
+                msg.res.should.have.property('callback');
+                msg.should.have.property('payload', true);
+                done();
+            });
+            client.connectTCP("127.0.0.1", options, test);
         });
     });
 });
