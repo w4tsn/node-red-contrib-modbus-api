@@ -5,8 +5,9 @@ const ModbusRTU = require('modbus-serial');
 
 helper.init(require.resolve('node-red'));
 
-let receiveFactory = function (client, values = 10, errCallback, done) {
+let receiveFactory = function (client, values, errCallback, done) {
     return function receive () {
+        clientOpen = true;
         client.setID(1);
         let readInputsPromise = client.readInputRegisters(0, values).then(data => {
             should.exist(data);
@@ -51,20 +52,27 @@ let receiveFactory = function (client, values = 10, errCallback, done) {
 };
 
 // ModbusRTU client
-let client = null;
+let client = new ModbusRTU();
+const options = { port: 8502 };
+let clientOpen;
 
 describe('modbus server node', function () {
 
     beforeEach((done) => {
-        client = new ModbusRTU();
+        clientOpen = false;
         helper.startServer(done);
     });
 
     afterEach((done) => {
-        client.close(() => {
+        if (clientOpen) {
+            client.close(() => {
+                helper.unload();
+                helper.stopServer(done);
+            });
+        } else {
             helper.unload();
             helper.stopServer(done);
-        });
+        }
     });
 
     it('should be loaded', function (done) {
@@ -92,21 +100,29 @@ describe('modbus server node', function () {
         }];
         helper.load(modbusServer, flow, () => {
             let modbusServerNode = helper.getNode('modbusserver');
-            modbusServerNode.modbusServerTCP.close(() => done());
+            modbusServerNode.modbusServerTCP.close(() => {
+                done();
+            });
         });
     });
 
-    it('should be accessible through client', function (done) {
+    it('should be accessible through client', function (done) { //just testing connection success to server, no read action for this test.
         let flow = [{
-            id: 'modbusserver',
-            type: 'modbus server',
-            name: 'modbus test server',
-            port: 8502
+            'id': 'modbusserver',
+            'type': 'modbus server',
+            'name': 'modbus test server',
+            'port': 8502
         }];
         helper.load(modbusServer, flow, () => {
-            client.connectTCP('127.0.0.1', { port: 8502 }, receiveFactory(client, 11, err => {
+            function test () {
+                clientOpen = true;
+            }
+            try {
+                client.connectTCP('127.0.0.1', options, test);
+            } catch (err) {
                 should.not.exist(err);
-            }, done));
+            }
+            done();
         });
     });
 
@@ -202,6 +218,52 @@ describe('modbus server node', function () {
         });
     });
 
+    it('should register a route for setCoil (FC5)', function (done) {
+        let flow = [{
+            id: 'modbusserver',
+            type: 'modbus server',
+            name: 'modbus test server',
+            port: 8502
+        }];
+        helper.load(modbusServer, flow, () => {
+            let modbusServerNode = helper.getNode('modbusserver');
+            should.exist(modbusServerNode.routes);
+            let handler = modbusServerNode.getRoute(0x0, 'setCoil');
+            should.not.exist(handler);
+            modbusServerNode.setCoil(0x0, (addr, callback) => {
+                callback(null, addr + 2);
+            }, error => {
+                should.not.exist(error);
+            });
+            handler = modbusServerNode.getRoute(0x0, 'setCoil');
+            should.exist(handler);
+            done();
+        });
+    });
+
+    it('should register a route for SetRegister (FC6)', function (done) {
+        let flow = [{
+            id: 'modbusserver',
+            type: 'modbus server',
+            name: 'modbus test server',
+            port: 8502
+        }];
+        helper.load(modbusServer, flow, () => {
+            let modbusServerNode = helper.getNode('modbusserver');
+            should.exist(modbusServerNode.routes);
+            let handler = modbusServerNode.getRoute(0x0, 'setRegister');
+            should.not.exist(handler);
+            modbusServerNode.setRegister(0x0, (addr, callback) => {
+                callback(null, addr + 2);
+            }, error => {
+                should.not.exist(error);
+            });
+            handler = modbusServerNode.getRoute(0x0, 'setRegister');
+            should.exist(handler);
+            done();
+        });
+    });
+
     it('should deregister a route correctly', function (done) {
         let flow = [{
             id: 'modbusserver',
@@ -266,10 +328,9 @@ describe('modbus server node', function () {
         helper.load(modbusServer, flow, () => {
             // should be 200 requested registers, but this causes a uncaught out of bounds
             // exception within modbus-serial package.
-            client.connectTCP('127.0.0.1', { port: 8502 }, receiveFactory(client, 65535, err => {
+            client.connectTCP('127.0.0.1', options, receiveFactory(client, 65535, err => {
                 should.exist(err);
             }, done));
         });
     });
-
 });
