@@ -124,20 +124,25 @@ const nodesUnderTest = [
 // ModbusRTU client
 let client = new ModbusRTU();
 const options = { port: 8502 };
+let clientOpen;
 
 describe('modbus in node', function () {
 
     beforeEach((done) => {
-        client.connectTCP("127.0.0.1", options, () => {
-            helper.startServer(done);
-        });
+        clientOpen = false;
+        helper.startServer(done);
     });
 
     afterEach((done) => {
-        client.close(() => {
+        if (clientOpen) {
+            client.close(() => {
+                helper.unload()
+                helper.stopServer(done);
+            });
+        } else {
             helper.unload()
             helper.stopServer(done);
-        });
+        }
     });
 
     it('should be loaded', function (done) {
@@ -178,6 +183,7 @@ describe('modbus in node', function () {
         helper.load(nodesUnderTest, testFlow, () => {
             let helperNode = helper.getNode('helper-node');
             let test = function () {
+                clientOpen = true;
                 client.setID(1);
                 client.readCoils(0, 1).catch(err => {
                     should.not.exist(err);
@@ -202,6 +208,7 @@ describe('modbus in node', function () {
         helper.load(nodesUnderTest, testFlow, () => {
             let helperNode = helper.getNode('helper-node');
             let test = function () {
+                clientOpen = true;
                 client.setID(1);
                 client.readDiscreteInputs(0, 1).catch(err => {
                     should.not.exist(err);
@@ -221,6 +228,7 @@ describe('modbus in node', function () {
         helper.load(nodesUnderTest, testFlow, () => {
             let helperNode = helper.getNode('helper-node');
             let test = function () {
+                clientOpen = true;
                 client.setID(1);
                 client.readHoldingRegisters(0, 1).catch(err => {
                     should.not.exist(err);
@@ -240,6 +248,7 @@ describe('modbus in node', function () {
         helper.load(nodesUnderTest, testFlow, () => {
             let helperNode = helper.getNode('helper-node');
             let test = function () {
+                clientOpen = true;
                 client.setID(1);
                 client.readInputRegisters(0, 1).catch(err => {
                     should.not.exist(err);
@@ -264,6 +273,7 @@ describe('modbus in node', function () {
         helper.load(nodesUnderTest, testFlow, () => {
             let helperNode = helper.getNode('helper-node');
             let test = function () {
+                clientOpen = true;
                 client.setID(1);
                 client.writeCoil(10, true).catch(err => {
                     should.not.exist(err);
@@ -289,6 +299,7 @@ describe('modbus in node', function () {
             let received = 0;
             let helperNode = helper.getNode('helper-node');
             let test = function () {
+                clientOpen = true;
                 client.setID(1);
                 client.writeCoils(10, [true]).catch(err => {
                     should.not.exist(err);

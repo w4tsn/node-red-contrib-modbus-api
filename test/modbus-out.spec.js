@@ -94,20 +94,25 @@ const nodesUnderTest = [
 // ModbusRTU client
 let client = new ModbusRTU();
 const options = { port: 8502 };
+let clientOpen = false;
 
 describe('modbus out node', function () {
 
     beforeEach((done) => {
-        client.connectTCP("127.0.0.1", options, () => {
-            helper.startServer(done);
-        });
+        clientOpen = false;
+        helper.startServer(done);
     });
 
     afterEach((done) => {
-        client.close(() => {
+        if (clientOpen) {
+            client.close(() => {
+                helper.unload();
+                helper.stopServer(done);
+            });
+        } else {
             helper.unload();
             helper.stopServer(done);
-        });
+        }
     });
 
     it('should be loaded', function (done) {
@@ -122,6 +127,7 @@ describe('modbus out node', function () {
         helper.load(nodesUnderTest, testFlow, () => {
             let helperNode = helper.getNode('helper-node');
             let test = function () {
+                clientOpen = true;
                 client.setID(1);
                 client.readCoils(0, 2).then(data => {
                     should.exist(data);
@@ -175,6 +181,7 @@ describe('modbus out node', function () {
         helper.load(nodesUnderTest, testFlow, () => {
             let helperNode = helper.getNode('helper-node');
             let test = function () {
+                clientOpen = true;
                 client.setID(1);
                 client.readInputRegisters(0, 2).then(data => {
                     should.exist(data);

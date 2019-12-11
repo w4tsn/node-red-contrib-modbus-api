@@ -7,6 +7,7 @@ helper.init(require.resolve('node-red'));
 
 let receiveFactory = function (client, values, errCallback, done) {
     return function receive () {
+        clientOpen = true;
         client.setID(1);
         let readInputsPromise = client.readInputRegisters(0, values).then(data => {
             should.exist(data);
@@ -53,20 +54,25 @@ let receiveFactory = function (client, values, errCallback, done) {
 // ModbusRTU client
 let client = new ModbusRTU();
 const options = { port: 8502 };
+let clientOpen;
 
 describe('modbus server node', function () {
 
     beforeEach((done) => {
-        client.connectTCP("127.0.0.1", options, () => {
-            helper.startServer(done);
-        });
+        clientOpen = false;
+        helper.startServer(done);
     });
 
     afterEach((done) => {
-        client.close(() => {
+        if (clientOpen) {
+            client.close(() => {
+                helper.unload();
+                helper.stopServer(done);
+            });
+        } else {
             helper.unload();
             helper.stopServer(done);
-        });
+        }
     });
 
     it('should be loaded', function (done) {
@@ -108,8 +114,11 @@ describe('modbus server node', function () {
             'port': 8502
         }];
         helper.load(modbusServer, flow, () => {
+            function test () {
+                clientOpen = true;
+            }
             try {
-                client.connectTCP('127.0.0.1', options);
+                client.connectTCP('127.0.0.1', options, test);
             } catch (err) {
                 should.not.exist(err);
             }
