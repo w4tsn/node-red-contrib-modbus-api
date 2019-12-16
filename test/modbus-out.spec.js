@@ -168,12 +168,14 @@ describe('modbus out node', function () {
             modbusOutNode.receive({ res: {} });
             modbusOutNode.receive({ res: { callback: () => true }});
             modbusOutNode.receive({ payload: {} });
-            let logEvents = helper.log().args.filter(evt => {
-                return evt[0].type === 'modbus out';
-            });
-            logEvents.should.not.be.empty();
-            logEvents.should.have.length(3);
-            done();
+            setTimeout(() => {
+                let logEvents = helper.log().args.filter(evt => {
+                    return evt[0].type === 'modbus out';
+                });
+                logEvents.should.not.be.empty();
+                logEvents.should.have.length(3);
+                done();
+            }, 20);
         });
     });
 
