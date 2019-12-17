@@ -92,20 +92,27 @@ const nodesUnderTest = [
 ];
 
 // ModbusRTU client
-let client = null;
+let client = new ModbusRTU();
+const options = { port: 8502 };
+let clientOpen = false;
 
 describe('modbus out node', function () {
 
     beforeEach((done) => {
-        client = new ModbusRTU();
+        clientOpen = false;
         helper.startServer(done);
     });
 
     afterEach((done) => {
-        client.close(() => {
+        if (clientOpen) {
+            client.close(() => {
+                helper.unload();
+                helper.stopServer(done);
+            });
+        } else {
             helper.unload();
             helper.stopServer(done);
-        });
+        }
     });
 
     it('should be loaded', function (done) {
@@ -120,8 +127,9 @@ describe('modbus out node', function () {
         helper.load(nodesUnderTest, testFlow, () => {
             let helperNode = helper.getNode('helper-node');
             let test = function () {
+                clientOpen = true;
                 client.setID(1);
-                client.readCoils(0, 10).then(data => {
+                client.readCoils(0, 2).then(data => {
                     should.exist(data);
                     data.should.have.property('data');
                     data.should.have.property('buffer');
@@ -149,7 +157,7 @@ describe('modbus out node', function () {
                 }
                 helperNode.send(msg);
             });
-            client.connectTCP('127.0.0.1', { port: 8502 }, test);
+            client.connectTCP('127.0.0.1', options, test);
         });
     });
 
@@ -175,8 +183,9 @@ describe('modbus out node', function () {
         helper.load(nodesUnderTest, testFlow, () => {
             let helperNode = helper.getNode('helper-node');
             let test = function () {
+                clientOpen = true;
                 client.setID(1);
-                client.readInputRegisters(0, 4).then(data => {
+                client.readInputRegisters(0, 2).then(data => {
                     should.exist(data);
                     data.data[0].should.be.equal(0);
                     data.data[1].should.be.equal(200);
@@ -201,7 +210,7 @@ describe('modbus out node', function () {
                 }
                 helperNode.send(msg);
             });
-            client.connectTCP('127.0.0.1', { port: 8502 }, test);
+            client.connectTCP('127.0.0.1', options, test);
         });
     });
 });
