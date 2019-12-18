@@ -136,12 +136,14 @@ describe('modbus in node', function () {
     afterEach((done) => {
         if (clientOpen) {
             client.close(() => {
-                helper.unload()
-                helper.stopServer(done);
+                helper.unload().then(() => {
+                    helper.stopServer(done);
+                });
             });
         } else {
-            helper.unload()
-            helper.stopServer(done);
+            helper.unload().then(() => {
+                helper.stopServer(done);
+            });
         }
     });
 
@@ -163,7 +165,7 @@ describe('modbus in node', function () {
             should.exist(modbusServerNode.routes);
             should.exist(modbusServerNode.routes.get('getCoil.0'));
             let route = modbusServerNode.routes.get('getCoil.0');
-            route.receive.should.be.equal(modbusInNode.readCallback);
+            route.receive.should.be.equal(modbusInNode.callback);
             route.errorHandler.should.be.equal(modbusInNode.errorHandler);
             done();
         });
@@ -200,7 +202,7 @@ describe('modbus in node', function () {
                 msg.res.should.have.property('callback');
                 done();
             });
-            client.connectTCP("127.0.0.1", options, test);
+            client.connectTCP('127.0.0.1', options, test);
         });
     });
 
@@ -220,7 +222,7 @@ describe('modbus in node', function () {
                 msg.req.should.have.property('command', 'getDiscreteInput');
                 done();
             });
-            client.connectTCP("127.0.0.1", options, test);
+            client.connectTCP('127.0.0.1', options, test);
         });
     });
 
@@ -240,7 +242,7 @@ describe('modbus in node', function () {
                 msg.req.should.have.property('command', 'getHoldingRegister');
                 done();
             });
-            client.connectTCP("127.0.0.1", options, test);
+            client.connectTCP('127.0.0.1', options, test);
         });
     });
 
@@ -265,7 +267,7 @@ describe('modbus in node', function () {
                 msg.res.should.have.property('callback');
                 done();
             });
-            client.connectTCP("127.0.0.1", options, test);
+            client.connectTCP('127.0.0.1', options, test);
         });
     });
 
@@ -290,13 +292,12 @@ describe('modbus in node', function () {
                 msg.res.should.have.property('callback');
                 done();
             });
-            client.connectTCP("127.0.0.1", options, test);
+            client.connectTCP('127.0.0.1', options, test);
         });
     });
 
     it('should output a sane modbus input message (FC6)', function (done) {
         helper.load(nodesUnderTest, testFlow, () => {
-            let received = 0;
             let helperNode = helper.getNode('helper-node');
             let test = function () {
                 clientOpen = true;
@@ -319,7 +320,7 @@ describe('modbus in node', function () {
                 msg.should.have.property('payload', true);
                 done();
             });
-            client.connectTCP("127.0.0.1", options, test);
+            client.connectTCP('127.0.0.1', options, test);
         });
     });
 });

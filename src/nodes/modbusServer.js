@@ -46,12 +46,13 @@ module.exports = function (RED) {
             node.addRoute(register, 'setCoil', receive, errorHandler);
         };
         const apiMethods = {
-            _apiReadHandler: function (addr, command, unitID, callback, defaultval) {
+            _apiHandler: function (addr, command, unitID, callback, value) {
                 let handler = node.routes.get(`${command}.${addr}`);
                     let req = {
                     register: addr,
                     unitID: unitID,
-                    command: command
+                    command: command,
+                    value: value
                 };
                 let res = {
                     callback: callback,
@@ -59,34 +60,11 @@ module.exports = function (RED) {
                 if (handler) {
                     handler.receive(req, res);
                 } else {
-                    callback({
+                    node.error('A client attempted to read from invalid register '+ JSON.stringify(req, null, '\t'));
+                    return callback({
                         modbusErrorCode: 0x02, // Illegal address
-                        msg: "Invalid length"
-                    },null);
-                    //node.error({error:'A client attempted to read from invalid register',req:req});
-                    node.error('A client attempted to read from invalid register '+ JSON.stringify(req,null,'\t'));
-                }
-            },
-            _apiWriteHandler: function (addr, command, unitID, callback, value) {
-                let handler = node.routes.get(`${command}.${addr}`);
-                let req = {
-                    register: addr,
-                    unitID: unitID,
-                    command: command,
-                    value: value,
-                };
-                let res = {
-                    callback: callback,
-                };
-                if (handler){
-                    handler.receive(req, res);
-                } else {
-                    callback({
-                        modbusErrorCode: 0x02, // Illegal address
-                        msg: "Invalid length"
-                    },null);
-                    //node.error({error:'A client attempted to write to invalid register',req:req});
-                    node.error('A client attempted to write to invalid register '+ JSON.stringify(req,null,'\t'));
+                        msg: 'Invalid length'
+                    }, null);
                 }
             },
             /**
@@ -96,7 +74,7 @@ module.exports = function (RED) {
              * @param {function} callback function to delegate result control
              */
             getInputRegister: function (addr, unitID, callback) {
-                apiMethods._apiReadHandler(addr, 'getInputRegister', unitID, callback, 0);
+                apiMethods._apiHandler(addr, 'getInputRegister', unitID, callback, 0);
             },
             /**
              * FC 3 Read holding registers
@@ -105,7 +83,7 @@ module.exports = function (RED) {
              * @param {function} callback function to delegate result control
              */
             getHoldingRegister: function (addr, unitID, callback) {
-                apiMethods._apiReadHandler(addr, 'getHoldingRegister', unitID, callback, 0);
+                apiMethods._apiHandler(addr, 'getHoldingRegister', unitID, callback, 0);
             },
             /**
              * FC 2 Read discrete inputs
@@ -114,7 +92,7 @@ module.exports = function (RED) {
              * @param {function} callback function to delegate result control
              */
             getDiscreteInput: function (addr, unitID, callback) {
-                apiMethods._apiReadHandler(addr, 'getDiscreteInput', unitID, callback, false);
+                apiMethods._apiHandler(addr, 'getDiscreteInput', unitID, callback, 0);
             },
             /**
              * FC 1 Read coil status
@@ -123,7 +101,7 @@ module.exports = function (RED) {
              * @param {function} callback function to delegate result control
              */
             getCoil: function (addr, unitID, callback) {
-                apiMethods._apiReadHandler(addr, 'getCoil', unitID, callback, false);
+                apiMethods._apiHandler(addr, 'getCoil', unitID, callback, 0);
             },
             /**
              * FC 5 Write coil
@@ -132,7 +110,7 @@ module.exports = function (RED) {
              * @param {function} callback function to delegate result control
              */
             setCoil: function (addr, value, unitID, callback) {
-                apiMethods._apiWriteHandler(addr, 'setCoil', unitID, callback, value);
+                apiMethods._apiHandler(addr, 'setCoil', unitID, callback, value);
             },
             /**
              * FC 6 Write register
@@ -141,17 +119,11 @@ module.exports = function (RED) {
              * @param {function} callback function to delegate result control
              */
             setRegister: function (addr, value, unitID, callback) {
-                apiMethods._apiWriteHandler(addr, 'setRegister', unitID, callback, value);
+                apiMethods._apiHandler(addr, 'setRegister', unitID, callback, value);
             },
         };
         try {
             node.modbusServerTCP = new ModbusRTU.ServerTCP(apiMethods, node.options);
-            node.modbusServerTCP.on('socketError', err => {
-                node.error(err);
-            });
-            node.modbusServerTCP.on('error', err => {
-                node.error(err);
-            });
             if (RED.settings.verbose) {
                 node.warn(`Modbus TCP Server listening on ${node.options.host}:${node.options.port}.`);
             } else {
@@ -160,8 +132,21 @@ module.exports = function (RED) {
         } catch (error) {
             node.error(`Error while starting the Modbus TCP server: ${error}`);
         }
+        node.modbusServerTCP.on('socketError', err => {
+            node.error(err);
+        });
+        node.modbusServerTCP.on('error', err => {
+            node.error(err);
+        });
         node.on('close', (done) => {
-            node.modbusServerTCP.close(() => done());
+            node.modbusServerTCP.close().then(() => {
+                if (RED.settings.verbose) {
+                    node.warn(`Modbus TCP Server on ${node.options.host}:${node.options.port} has closed.`);
+                } else {
+                    node.log(`Modbus TCP Server on ${node.options.host}:${node.options.port} has closed.`);
+                }
+                done();
+            });
         });
     }
     RED.nodes.registerType('modbus server', modbusServerNode);

@@ -4,6 +4,7 @@ const modbusServer = require('../src/nodes/modbusServer');
 const ModbusRTU = require('modbus-serial');
 
 helper.init(require.resolve('node-red'));
+let clientOpen;
 
 let receiveFactory = function (client, values, errCallback, done) {
     return function receive () {
@@ -54,7 +55,6 @@ let receiveFactory = function (client, values, errCallback, done) {
 // ModbusRTU client
 let client = new ModbusRTU();
 const options = { port: 8502 };
-let clientOpen;
 
 describe('modbus server node', function () {
 
@@ -66,12 +66,14 @@ describe('modbus server node', function () {
     afterEach((done) => {
         if (clientOpen) {
             client.close(() => {
-                helper.unload();
-                helper.stopServer(done);
+                helper.unload().then(() => {
+                    helper.stopServer(done);
+                });
             });
         } else {
-            helper.unload();
-            helper.stopServer(done);
+            helper.unload().then(() => {
+                helper.stopServer(done);
+            });
         }
     });
 
