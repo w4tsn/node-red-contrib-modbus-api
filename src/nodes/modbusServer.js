@@ -146,6 +146,9 @@ module.exports = function (RED) {
         };
         try {
             node.modbusServerTCP = new ModbusRTU.ServerTCP(apiMethods, node.options);
+            node.modbusServerTCP._server.on('error', err => {
+                node.error(err);
+            });
             node.modbusServerTCP.on('socketError', err => {
                 node.error(err);
             });
