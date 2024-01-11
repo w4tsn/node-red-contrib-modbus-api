@@ -2,9 +2,9 @@
     RED.nodes.registerType('modbus server', {
         category: 'config',
         defaults: {
-            host: { value: "0.0.0.0", required: true, validate:RED.validators.regex('\b((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.|$)){4}\b') },
+            host: { value: "0.0.0.0", required: true },
             port: { value: 1502, required: true, validate:RED.validators.number(true) },
-            debug: { value: false, required: false, validate:RED.validators.regex('\btrue\b|\bfalse\b') },
+            debug: { value: false, required: false },
             unitID: { value: 0, required: true, validate:RED.validators.number(true) },
         },
         label: function() {
@@ -25,7 +25,7 @@
     </div>
     <div class="form-row">
         <label for="node-config-input-debug"><i class="icon-file"></i> Debug-Mode</label>
-        <input type="checkbox" id="node-config-input-debug" style="width:0%;">
+        <input type="checkbox" id="node-config-input-debug">
     </div>
 </script>
 
